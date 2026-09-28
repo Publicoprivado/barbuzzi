@@ -233,23 +233,22 @@ function viewPlayground() {
 
 let playObserver = null;
 
-// Thumbnails fade in while rising the same short distance as they come into view.
-// Only the timing is random, so the ones arriving together appear one after another.
+// The thumbnails on screen when the page opens fade in while rising the same short
+// distance, in random order. Everything further down is simply there when scrolled to.
 function swoopIn(field) {
   if (reduceMotion.matches || !('IntersectionObserver' in window)) return;
   const thumbs = $$('.thumb', field);
   thumbs.forEach((t) => t.classList.add('is-waiting'));
   playObserver = new IntersectionObserver((entries) => {
+    playObserver.disconnect(); // first look only
+    thumbs.forEach((t) => t.classList.remove('is-waiting'));
     shuffle(entries.filter((en) => en.isIntersecting)).forEach((en, k) => {
-      const t = en.target;
-      playObserver.unobserve(t);
-      t.classList.remove('is-waiting');
-      t.animate([
+      en.target.animate([
         { transform: 'translateY(40px)', opacity: 0 },
         { transform: 'none', opacity: 1 },
       ], { duration: 900, delay: k * 45 + rand(0, 200), easing: 'cubic-bezier(0.16, 1, 0.3, 1)', fill: 'backwards' });
     });
-  }, { threshold: 0.05 });
+  });
   thumbs.forEach((t) => playObserver.observe(t));
 }
 
@@ -539,23 +538,25 @@ function parse(href) {
 
 let route = null;
 
-// Page images (.reveal) unmask from the top down with a slight settle-in zoom as they enter
-// the viewport, cascading top-left to bottom-right when several arrive together.
-// The styles live in main.css under "Mask reveal".
+// Page images (.reveal) on screen when the page opens unmask from the top down with a
+// slight settle-in zoom, cascading top-left to bottom-right. Everything below the fold
+// loses .reveal and is simply there when scrolled to. Styles: main.css "Mask reveal".
 let revealObserver = null;
 function observeReveals(root) {
   const els = $$('.reveal', root);
   if (!els.length) return;
   revealObserver = new IntersectionObserver((entries) => {
-    entries
+    revealObserver.disconnect(); // first look only
+    const onScreen = entries
       .filter((en) => en.isIntersecting)
       .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top || a.boundingClientRect.left - b.boundingClientRect.left)
-      .forEach((en, k) => {
-        en.target.style.setProperty('--delay', `${Math.min(40 + k * 70, 450)}ms`);
-        en.target.classList.add('is-revealed');
-        revealObserver.unobserve(en.target);
-      });
-  }, { threshold: 0.08 });
+      .map((en) => en.target);
+    onScreen.forEach((el, k) => {
+      el.style.setProperty('--delay', `${Math.min(40 + k * 70, 450)}ms`);
+      el.classList.add('is-revealed');
+    });
+    els.forEach((el) => { if (!onScreen.includes(el)) el.classList.remove('reveal'); });
+  });
   els.forEach((el) => revealObserver.observe(el));
 }
 
