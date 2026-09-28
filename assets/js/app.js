@@ -23,6 +23,7 @@ const BASE = new URL(document.baseURI).pathname;
 const view = $('#view');
 const shapesSvg = $('#shapes');
 const setLayout = mountShapes(shapesSvg);
+const MASK_EASE = 'cubic-bezier(0.25, 1, 0.5, 1)'; // quick start, soft landing — same as --mask-ease in main.css
 const narrowMQ = matchMedia('(max-width: 760px)');
 const portraitMQ = matchMedia('(max-aspect-ratio: 1/1)');
 const hoverMQ = matchMedia('(hover: hover) and (pointer: fine)');
@@ -107,8 +108,8 @@ function viewObjectsGrid() {
     const b = boxes[i];
     const im = coverOf(p);
     const sizes = narrowMQ.matches ? `${Math.round((b.w / pat.W) * 100)}vw` : `${((b.w / pat.W) * 100).toFixed(1)}vw`;
-    return `<a class="card" href="${urlOf(p)}" style="left:${pct(b.x, pat.W)};top:${pct(b.y, H)};width:${pct(b.w, pat.W)};height:${pct(b.h, H)};--c:${im.c}">
-      ${imgTag(im, { sizes, eager: i < 4 })}<span class="card__label label">${esc(p.title)}</span></a>`;
+    return `<a class="card reveal" href="${urlOf(p)}" style="left:${pct(b.x, pat.W)};top:${pct(b.y, H)};width:${pct(b.w, pat.W)};height:${pct(b.h, H)};--c:${im.c}">
+      <span class="mask">${imgTag(im, { sizes, eager: i < 4 })}<span class="card__label label">${esc(p.title)}</span></span></a>`;
   });
   return `<h1 class="sr-only">Objects</h1><section class="grid" style="aspect-ratio:${pat.W}/${H.toFixed(1)}">${cards.join('')}</section>`;
 }
@@ -160,8 +161,8 @@ function viewProject(p) {
   const frames = p.images.map((im, i) => {
     const f = p.frames?.[im.n];
     const kind = f?.wide ? 'wide' : im.h / im.w > 1.1 ? 'tall' : 'broad';
-    return `<figure class="frame frame--${kind}" style="--c:${im.c}" data-i="${i}">
-      ${imgTag(im, { sizes: FRAME_SIZES[kind], eager: i < 2, style: f?.pos ? `object-position:${f.pos}` : '' })}</figure>`;
+    return `<figure class="frame reveal frame--${kind}" style="--c:${im.c}" data-i="${i}">
+      <div class="mask">${imgTag(im, { sizes: FRAME_SIZES[kind], eager: i < 2, style: f?.pos ? `object-position:${f.pos}` : '' })}</div></figure>`;
   });
   return `<article class="project">
     <header class="project__head blend">
@@ -184,8 +185,8 @@ function viewScenes() {
   const items = bySection('scenes');
   let k = 0;
   const blocks = items.map((p, pi) => {
-    const frames = p.images.map((im) => `<figure class="scene__frame" style="--c:${im.c}" data-k="${k++}">
-      ${imgTag(im, { sizes: '(max-width: 760px) calc(100vw - 60px), 40.4vw', eager: pi < 2 })}</figure>`);
+    const frames = p.images.map((im) => `<figure class="scene__frame reveal" style="--c:${im.c}" data-k="${k++}">
+      <div class="mask">${imgTag(im, { sizes: '(max-width: 760px) calc(100vw - 60px), 40.4vw', eager: pi < 2 })}</div></figure>`);
     return `<article class="scene" id="${p.slug}">
       <div class="scene__images">${frames.join('')}</div>
       <div class="scene__aside"><div class="scene__text blend">
@@ -349,6 +350,14 @@ function openLightbox(items, index) {
     const base = `${BASE}assets/img/${im.project.slug}/${im.f}`;
     img.srcset = im.s.map((w) => `${base}-${w}.webp ${w}w`).join(', ');
     img.sizes = `min(100vw, ${((97 * im.w) / im.h).toFixed(1)}vh)`;
+    // Keep it masked until the new picture is ready, then unmask it from the top down.
+    if (!reduceMotion.matches) {
+      img.style.clipPath = 'inset(0 0 100% 0)';
+      img.onload = img.onerror = () => {
+        img.style.clipPath = '';
+        img.animate([{ clipPath: 'inset(0 0 100% 0)' }, { clipPath: 'inset(0 0 0 0)' }], { duration: 450, easing: MASK_EASE });
+      };
+    }
     img.src = `${base}-${im.s[im.s.length - 1]}.webp`;
     img.alt = im.project.title;
     cap.innerHTML = caption ? (href ? `<a href="${href}">${esc(caption)}</a>` : esc(caption)) : '';
@@ -497,11 +506,17 @@ function openFilmstrip(images, index) {
     removeEventListener('resize', onResize);
   };
 
-  // Open by gliding in from the right onto the clicked image.
+  // Open by gliding in from the right onto the clicked image, the frames around it
+  // unmasking one after another.
   measure();
   target = posOf(clampIndex(index));
   x = lastX = still ? target : target + Math.min(strip.clientWidth * 0.3, 420);
   wake();
+  if (!still) {
+    frames.slice(Math.max(0, index - 2), index + 4).forEach((f, k) => {
+      f.animate([{ clipPath: 'inset(0 0 100% 0)' }, { clipPath: 'inset(0 0 0 0)' }], { duration: 550, delay: 40 + k * 60, easing: MASK_EASE, fill: 'backwards' });
+    });
+  }
 }
 
 // ── Router ─────────────────────────────────────────────────────────────
@@ -524,10 +539,32 @@ function parse(href) {
 
 let route = null;
 
+// Page images (.reveal) unmask from the top down with a slight settle-in zoom as they enter
+// the viewport, cascading top-left to bottom-right when several arrive together.
+// The styles live in main.css under "Mask reveal".
+let revealObserver = null;
+function observeReveals(root) {
+  const els = $$('.reveal', root);
+  if (!els.length) return;
+  revealObserver = new IntersectionObserver((entries) => {
+    entries
+      .filter((en) => en.isIntersecting)
+      .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top || a.boundingClientRect.left - b.boundingClientRect.left)
+      .forEach((en, k) => {
+        en.target.style.setProperty('--delay', `${Math.min(40 + k * 70, 450)}ms`);
+        en.target.classList.add('is-revealed');
+        revealObserver.unobserve(en.target);
+      });
+  }, { threshold: 0.08 });
+  els.forEach((el) => revealObserver.observe(el));
+}
+
 function render() {
   closeOverlay(true);
   playObserver?.disconnect();
   playObserver = null;
+  revealObserver?.disconnect();
+  revealObserver = null;
   route = parse(location.href);
   const { page, section } = route;
   const body = document.body;
@@ -557,6 +594,7 @@ function render() {
   }[page]();
   view.innerHTML = html;
   revealLoaded(view);
+  observeReveals(view);
 
   if (page === 'objects' && route.view === 'index') mountObjectsIndex();
   if (page === 'project') mountProject(route.project);
