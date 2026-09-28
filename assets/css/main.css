@@ -330,8 +330,6 @@ img.fade.is-loaded { opacity: 1; }
   text-align: center;
 }
 .info__inner { width: 100%; max-width: 92ch; }
-.info__contact span:not(.info__sep),
-.info__contact a { white-space: nowrap; }
 .info__inner p { margin: 0; }
 .info__role { margin-bottom: calc(30 * var(--u)) !important; }
 .info__contact,

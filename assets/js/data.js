@@ -19,19 +19,21 @@ export const SITE = {
     'Lucas Barbuzzi is a Buenos Aires–based artist and designer, born in Patagonia, Bariloche. ' +
     'Formerly a stage and lighting designer, he now creates surreal 3D scenes informed by ' +
     'architecture and natural landscapes. His current practice is focused on furniture design.',
-  // Contact line exactly as laid out in the PDF — remove anything that shouldn't be public.
-  contact: [
-    { label: 'piso 29' },
-    { label: 'amenábar 2046—timbre 291' },
-    { label: '+54 9 2944 63-1976', href: 'tel:+5492944631976' },
-    { label: 'lucasjbar@gmail.com', href: 'mailto:lucasjbar@gmail.com' },
-    { label: 'instagram', href: 'https://www.instagram.com/lucasbarbuzzi/' },
-  ],
+  // Only Instagram is published — no address, phone or email (keeps them away from scrapers).
+  instagram: 'https://www.instagram.com/lucasbarbuzzi/',
   clients: [
     'Google', 'GitHub', 'Nike', 'Amazon', 'Microsoft', "L'Oréal", 'Meta', 'The Mill',
     'Mr Porter', 'Yambo Studio', 'Joe Mortell', 'Humanscale',
   ],
 };
+
+// Placeholder copy from the PDF. Every object/scene without its own `description`
+// shows this until the real text is written.
+const PLACEHOLDER =
+  'Lorem ipsum dolor sit amet, consectetuer adipiscing elit, sed diam nonummy nibh euismod ' +
+  'tincidunt ut laoreet dolore magna aliquam erat volutpat. Ut wisi enim ad minim veniam, quis ' +
+  'nostrud exerci tation ullamcorper suscipit lobortis nisl ut aliquip ex ea commodo consequat. ' +
+  'Duis autem vel eum iriure dolor in hendrerit in vulputate';
 
 export const PROJECTS = [
   // ── Objects ────────────────────────────────────────────────────────────
@@ -39,7 +41,6 @@ export const PROJECTS = [
     slug: 'lampara-2d',
     title: 'Lámpara 2D',
     section: 'objects',
-    description: '',
     specs: ['Lámpara de mesa', '120x80cm', '2 kg.', 'Metal — Resina A Molde', 'Negro y ámbar', 'A Pedido'],
     frames: { 2: { wide: true, pos: '50% 28%' } },
   },
@@ -73,4 +74,4 @@ export const PROJECTS = [
 
   // ── Playground only ────────────────────────────────────────────────────
   { slug: 'stage-and-lighting', title: 'Stage & Lighting', section: 'playground' },
-];
+].map((p) => (p.description || p.section === 'playground' ? p : { ...p, description: PLACEHOLDER }));

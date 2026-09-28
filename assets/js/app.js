@@ -84,14 +84,11 @@ function viewHome() {
 }
 
 function viewInformation() {
-  const contact = SITE.contact
-    .map((c) => (c.href ? `<a href="${esc(c.href)}"${c.href.startsWith('http') ? ' target="_blank" rel="noopener"' : ''}>${esc(c.label)}</a>` : `<span>${esc(c.label)}</span>`))
-    .join(' <span class="info__sep">|</span> ');
   return `<section class="info"><div class="info__inner">
     <h1 class="sr-only">${esc(SITE.name)}</h1>
     <p class="info__role">${esc(SITE.role)}</p>
     <p class="info__bio">${esc(SITE.bio)}</p>
-    <p class="info__contact">${contact}</p>
+    <p class="info__contact"><a href="${esc(SITE.instagram)}" target="_blank" rel="noopener">instagram</a></p>
     <p class="info__clients">Worked with — ${SITE.clients.map(esc).join(', ')}.</p>
   </div></section>`;
 }
