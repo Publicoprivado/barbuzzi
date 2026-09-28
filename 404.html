@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lucas Barbuzzi</title>
+  <meta name="description" content="Lucas Barbuzzi — Buenos Aires–based artist and object designer. Objects, scenes and furniture design.">
+  <meta name="theme-color" content="#FFFDF0">
+  <meta property="og:title" content="Lucas Barbuzzi">
+  <meta property="og:description" content="Buenos Aires–based artist and object designer.">
+  <meta property="og:type" content="website">
+  <script>
+    // Work out the site root so the same files run at "/" (local, custom domain) and at
+    // "/<repo>/" (GitHub Pages), including deep links served through 404.html. Assets are
+    // added from here, after <base>, so nothing is requested from the wrong folder.
+    (function () {
+      var p = location.pathname;
+      var m = p.match(/^(.*?\/)(?:(?:objects|scenes|playground|information)(?:\/.*)?)?$/);
+      var base = m ? m[1] : /\.github\.io$/.test(location.hostname) ? p.replace(/^(\/[^/]+\/).*$/, '$1') : '/';
+      var head = document.head;
+      function add(tag, attrs) {
+        var el = document.createElement(tag);
+        for (var k in attrs) el.setAttribute(k, attrs[k]);
+        head.appendChild(el);
+      }
+      add('base', { href: base });
+      add('link', { rel: 'icon', href: 'favicon.svg', type: 'image/svg+xml' });
+      add('link', { rel: 'preload', href: 'assets/fonts/dm-mono-500.woff2', as: 'font', type: 'font/woff2', crossorigin: '' });
+      add('link', { rel: 'preload', href: 'assets/fonts/dm-mono-300.woff2', as: 'font', type: 'font/woff2', crossorigin: '' });
+      add('link', { rel: 'stylesheet', href: 'assets/css/main.css' });
+      add('script', { type: 'module', src: 'assets/js/app.js' });
+    })();
+  </script>
+</head>
+<body data-layout="home">
+  <svg class="shapes" id="shapes" viewBox="0 0 1920 1080" preserveAspectRatio="xMidYMid meet" aria-hidden="true" focusable="false"></svg>
+
+  <a class="wordmark" id="wordmark" href="./">LUCASBARBUZZI</a>
+
+  <nav class="edges" aria-label="Main">
+    <a class="edge edge--top" data-section="information" href="information">Information</a>
+    <a class="edge edge--left" data-section="objects" href="objects">Objects</a>
+    <div class="subnav" aria-label="Objects view">
+      <a href="objects" data-view="grid">Grid</a>
+      <a href="objects?view=index" data-view="index">Index</a>
+    </div>
+    <a class="edge edge--right" data-section="scenes" href="scenes">Scenes</a>
+    <a class="edge edge--bottom" data-section="playground" href="playground">Playground</a>
+  </nav>
+
+  <a class="mark" href="./" aria-label="Lucas Barbuzzi — home"></a>
+
+  <main id="view" class="view" tabindex="-1"></main>
+
+  <noscript>
+    <p class="noscript">Lucas Barbuzzi — Object Designer. <a href="mailto:lucasjbar@gmail.com">lucasjbar@gmail.com</a></p>
+  </noscript>
+</body>
+</html>
