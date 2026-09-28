@@ -318,6 +318,7 @@ img.fade.is-loaded { opacity: 1; }
 }
 .thumb img { display: block; width: 100%; height: auto; pointer-events: none; -webkit-user-drag: none; }
 .thumb.is-dragging { cursor: grabbing; }
+.thumb.is-waiting { opacity: 0; } /* until its swoop-in starts (see swoopIn) */
 
 /* ── Information ───────────────────────────────────────────────────── */
 .info {

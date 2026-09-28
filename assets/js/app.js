@@ -230,9 +230,32 @@ function viewPlayground() {
   return `<h1 class="sr-only">Playground</h1><section class="playground" style="aspect-ratio:${pat.W}/${H.toFixed(1)}">${thumbs.join('')}</section>`;
 }
 
+let playObserver = null;
+
+// Thumbnails fade in while rising the same short distance as they come into view.
+// Only the timing is random, so the ones arriving together appear one after another.
+function swoopIn(field) {
+  if (reduceMotion.matches || !('IntersectionObserver' in window)) return;
+  const thumbs = $$('.thumb', field);
+  thumbs.forEach((t) => t.classList.add('is-waiting'));
+  playObserver = new IntersectionObserver((entries) => {
+    shuffle(entries.filter((en) => en.isIntersecting)).forEach((en, k) => {
+      const t = en.target;
+      playObserver.unobserve(t);
+      t.classList.remove('is-waiting');
+      t.animate([
+        { transform: 'translateY(40px)', opacity: 0 },
+        { transform: 'none', opacity: 1 },
+      ], { duration: 900, delay: k * 45 + rand(0, 200), easing: 'cubic-bezier(0.16, 1, 0.3, 1)', fill: 'backwards' });
+    });
+  }, { threshold: 0.05 });
+  thumbs.forEach((t) => playObserver.observe(t));
+}
+
 function mountPlayground() {
   const field = $('.playground');
   if (!field) return;
+  swoopIn(field);
   let z = 10;
   field.addEventListener('pointerdown', (e) => {
     const t = e.target.closest('.thumb');
@@ -503,6 +526,8 @@ let route = null;
 
 function render() {
   closeOverlay(true);
+  playObserver?.disconnect();
+  playObserver = null;
   route = parse(location.href);
   const { page, section } = route;
   const body = document.body;
